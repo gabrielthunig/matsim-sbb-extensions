@@ -4,7 +4,6 @@
 
 package ch.sbb.matsim.routing.pt.raptor;
 
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.facilities.Facility;
 import org.matsim.pt.transitSchedule.api.TransitLine;
@@ -20,8 +19,8 @@ import java.util.List;
  */
 public class RaptorRoute {
 
-    final Facility<?> fromFacility;
-    final Facility<?> toFacility;
+    final Facility fromFacility;
+    final Facility toFacility;
     private final double totalCosts;
     private double departureTime = Double.NaN;
     private double travelTime =  0;
@@ -29,7 +28,7 @@ public class RaptorRoute {
     private List<RoutePart> editableParts = new ArrayList<>();
     final List<RoutePart> parts = Collections.unmodifiableList(this.editableParts);
 
-    public RaptorRoute(Facility<?> fromFacility, Facility<?> toFacility, double totalCosts) {
+    public RaptorRoute(Facility fromFacility, Facility toFacility, double totalCosts) {
         this.fromFacility = fromFacility;
         this.toFacility = toFacility;
         this.totalCosts = totalCosts;

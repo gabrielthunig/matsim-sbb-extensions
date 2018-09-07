@@ -4,34 +4,64 @@
 
 package ch.sbb.matsim.mobsim.qsim;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import ch.sbb.matsim.config.SBBTransitConfigGroup;
+import ch.sbb.matsim.mobsim.qsim.pt.SBBTransitEngineModule;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
-import org.matsim.core.mobsim.qsim.AbstractQSimPlugin;
-import org.matsim.core.mobsim.qsim.ActivityEnginePlugin;
-import org.matsim.core.mobsim.qsim.PopulationPlugin;
-import org.matsim.core.mobsim.qsim.TeleportationPlugin;
-import org.matsim.core.mobsim.qsim.changeeventsengine.NetworkChangeEventsPlugin;
-import org.matsim.core.mobsim.qsim.messagequeueengine.MessageQueuePlugin;
+import org.matsim.core.mobsim.framework.Mobsim;
+import org.matsim.core.mobsim.qsim.AbstractQSimModule;
+import org.matsim.core.mobsim.qsim.ActivityEngineModule;
+import org.matsim.core.mobsim.qsim.PopulationModule;
+import org.matsim.core.mobsim.qsim.QSimProvider;
+import org.matsim.core.mobsim.qsim.TeleportationModule;
+import org.matsim.core.mobsim.qsim.changeeventsengine.NetworkChangeEventsModule;
+import org.matsim.core.mobsim.qsim.components.QSimComponentsModule;
+import org.matsim.core.mobsim.qsim.messagequeueengine.MessageQueueModule;
 import org.matsim.core.mobsim.qsim.pt.ComplexTransitStopHandlerFactory;
 import org.matsim.core.mobsim.qsim.pt.TransitStopHandlerFactory;
-import org.matsim.core.mobsim.qsim.qnetsimengine.QNetsimEnginePlugin;
+import org.matsim.core.mobsim.qsim.qnetsimengine.DefaultQNetworkFactory;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QLanesNetworkFactory;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QNetsimEngineModule;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QNetworkFactory;
 
-import com.google.inject.Provides;
-
-import ch.sbb.matsim.mobsim.qsim.pt.SBBTransitEnginePlugin;
+import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author mrieser / SBB
  */
 public class SBBQSimModule extends AbstractModule {
 
+    @Inject Config config ;
+
     @Override
     public void install() {
+        install(new QSimComponentsModule());
+
+        getQSimModules().forEach(this::installQSimModule);
+
+        bind(Key.get(new TypeLiteral<List<AbstractQSimModule>>() {
+        }, Names.named("overrides"))).toInstance(Collections.emptyList());
+
+        bind(new TypeLiteral<Collection<AbstractQSimModule>>() {
+        }).to(new TypeLiteral<Set<AbstractQSimModule>>() {
+        });
+
+        bind(Mobsim.class).toProvider(QSimProvider.class);
+        if ( config.qsim().isUseLanes() ) {
+            bind(QNetworkFactory.class).to( QLanesNetworkFactory.class ) ;
+        } else {
+            bind(QNetworkFactory.class).to( DefaultQNetworkFactory.class ) ;
+        }
+
         bind(TransitStopHandlerFactory.class).to(ComplexTransitStopHandlerFactory.class).asEagerSingleton();
 
         // make sure the config is registered before the simulation starts
@@ -40,21 +70,16 @@ public class SBBQSimModule extends AbstractModule {
     }
 
     // @SuppressWarnings("static-method")
-    @Provides
-    Collection<AbstractQSimPlugin> provideQSimPlugins(Config config) {
-        final Collection<AbstractQSimPlugin> plugins = new ArrayList<>();
-        plugins.add(new MessageQueuePlugin(config));
-        plugins.add(new ActivityEnginePlugin(config));
-        plugins.add(new QNetsimEnginePlugin(config));
-        if (config.network().isTimeVariantNetwork()) {
-            plugins.add(new NetworkChangeEventsPlugin(config));
-        }
-        if (config.transit().isUseTransit()) {
-            plugins.add(new SBBTransitEnginePlugin(config));
-        }
-        plugins.add(new TeleportationPlugin(config));
-        plugins.add(new PopulationPlugin(config));
-        return plugins;
+    static public Collection<AbstractQSimModule> getQSimModules() {
+        return Arrays.asList(
+            new MessageQueueModule(),
+            new ActivityEngineModule(),
+            new QNetsimEngineModule(),
+            new TeleportationModule(),
+            new PopulationModule(),
+            new NetworkChangeEventsModule(),
+            new SBBTransitEngineModule()
+        );
     }
 
 }

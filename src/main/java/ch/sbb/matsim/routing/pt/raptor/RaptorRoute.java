@@ -79,7 +79,19 @@ public class RaptorRoute {
         return 0;
     }
 
-    static final class RoutePart {
+    public List<RoutePart> getParts() {
+        return parts;
+    }
+
+    public Facility<?> getFromFacility() {
+        return fromFacility;
+    }
+
+    public Facility<?> getToFacility() {
+        return toFacility;
+    }
+
+    public static final class RoutePart {
         final TransitStopFacility fromStop;
         final TransitStopFacility toStop;
         final String mode;
@@ -100,6 +112,10 @@ public class RaptorRoute {
             this.line = line;
             this.route = route;
             this.planElements = planElements;
+        }
+
+        public TransitRoute getRoute() {
+            return route;
         }
     }
 }

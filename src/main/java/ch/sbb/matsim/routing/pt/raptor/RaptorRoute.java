@@ -117,5 +117,37 @@ public class RaptorRoute {
         public TransitRoute getRoute() {
             return route;
         }
+
+        public TransitStopFacility getFromStop() {
+            return fromStop;
+        }
+
+        public TransitStopFacility getToStop() {
+            return toStop;
+        }
+
+        public String getMode() {
+            return mode;
+        }
+
+        public double getDepTime() {
+            return depTime;
+        }
+
+        public double getTravelTime() {
+            return travelTime;
+        }
+
+        public double getDistance() {
+            return distance;
+        }
+
+        public TransitLine getLine() {
+            return line;
+        }
+
+        public List<? extends PlanElement> getPlanElements() {
+            return planElements;
+        }
     }
 }
